@@ -984,10 +984,25 @@
                 syncNullState(); updateBrandLive();
                 scrollToId("formAnchor");
               } else if (act === "del"){
-                if (!confirm("¿Eliminar el BIN " + rec.bin + " (" + rec.brand + " · " + rec.platform + ")?")) return;
+                /* Confirmación en el mismo botón, sin confirm() nativo:
+                   el diálogo nativo no se ve en algunos navegadores y el
+                   clic parecía no hacer nada. Primer clic pide confirmar,
+                   segundo clic dentro de 5 s elimina de verdad. */
+                if (btn.getAttribute("data-confirm") !== "1"){
+                  btn.setAttribute("data-confirm", "1");
+                  btn.textContent = "¿Confirmar?";
+                  setTimeout(function(){ if (btn.isConnected){ btn.removeAttribute("data-confirm"); btn.textContent = "Eliminar"; } }, 5000);
+                  return;
+                }
+                btn.disabled = true; btn.textContent = "Eliminando…";
                 if (SUPABASE_CONFIGURED && sb){
-                  try { await deleteBinInSupabase(rec.id); }
-                  catch (e){ toast("No se pudo eliminar en Supabase (" + (e && e.message ? e.message : "error") + ")."); return; }
+                  try {
+                    await deleteBinInSupabase(rec.id);
+                    var chk = await sb.from("bins").select("id").eq("id", rec.id).maybeSingle();
+                    if (chk.error) throw chk.error;
+                    if (chk.data) throw new Error("el registro sigue en Supabase");
+                  }
+                  catch (e){ toast("No se pudo eliminar en Supabase (" + (e && e.message ? e.message : "error") + ")."); renderAll(); return; }
                 }
                 bins = bins.filter(function(x){ return String(x.id) !== String(id); });
                 toast("BIN eliminado: " + rec.bin);
