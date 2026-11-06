@@ -160,7 +160,7 @@
       .toolbar input[type="search"],.toolbar select{width:100%;padding:11px 13px;font-size:14.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;outline:none}
       .toolbar select{width:auto}
       .toolbar input:focus,.toolbar select:focus{border-color:var(--green)}
-      .bin{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:1.15fr .85fr 1.1fr .7fr auto;gap:10px 16px;align-items:center}
+      .bin{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:1.05fr .75fr .85fr 1fr .6fr auto;gap:10px 16px;align-items:center}
       .bin .binn{font-weight:800;font-size:16px;line-height:1.25;letter-spacing:.04em}
       .bin .brand{font-size:12.5px;color:var(--ink-2);font-weight:700;margin-top:3px}
       .bin .lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
@@ -318,6 +318,14 @@
                     </div>
                     <div class="hint">Toca un resultado de la lista mundial o escribe un nombre libre.</div>
                   </div>
+                  <div class="field wide">
+                    <label for="fCountry">País al que pertenece el BIN</label>
+                    <div class="sugg-wrap">
+                      <input id="fCountry" type="text" placeholder="Busca un país… Ej.: Perú" />
+                      <div class="sugg" id="countrySugg"></div>
+                    </div>
+                    <div class="hint">Toca un resultado de la lista de países o escribe un nombre libre.</div>
+                  </div>
                   <div class="field">
                     <label>Fecha de vencimiento</label>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -362,7 +370,7 @@
             <h2 class="sec" id="listAnchor"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>BINs registrados</h2>
             <p class="sec-sub">Los próximos a vencer aparecen primero. Sin fecha se muestra ---.</p>
             <div class="toolbar">
-              <div class="search"><input type="search" id="searchInput" placeholder="Buscar por BIN, marca, plataforma o link…" /></div>
+              <div class="search"><input type="search" id="searchInput" placeholder="Buscar por BIN, marca, plataforma, país o link…" /></div>
               <select id="platformFilter" aria-label="Filtrar por plataforma"><option value="all">Todas las plataformas</option></select>
               <select id="statusFilter" aria-label="Filtrar por estado">
                 <option value="all">Todos los estados</option>
@@ -372,6 +380,7 @@
                 <option value="null">Sin vencimiento</option>
               </select>
               <select id="brandFilter" aria-label="Filtrar por marca"><option value="all">Todas las marcas</option></select>
+              <select id="countryFilter" aria-label="Filtrar por país"><option value="all">Todos los países</option></select>
               <button class="btn-ghost" id="clearFilterBtn" type="button">Ver todos</button>
             </div>
             <div id="binsArea"></div>
@@ -481,6 +490,49 @@
         ];
         var PLATFORM_NAMES = PLATFORMS.map(function(p){ return p.name; });
 
+        /* ============ PAÍSES DEL MUNDO (español) ============ */
+        var COUNTRIES = [
+          "Afganistán","Albania","Alemania","Andorra","Angola","Antigua y Barbuda",
+          "Arabia Saudita","Argelia","Argentina","Armenia","Australia","Austria",
+          "Azerbaiyán","Bahamas","Bangladés","Barbados","Baréin","Bélgica",
+          "Belice","Benín","Bielorrusia","Birmania","Bolivia","Bosnia y Herzegovina",
+          "Botsuana","Brasil","Brunéi","Bulgaria","Burkina Faso","Burundi",
+          "Bután","Cabo Verde","Camboya","Camerún","Canadá","Catar",
+          "Chad","Chile","China","Chipre","Colombia","Comoras",
+          "Congo","Corea del Norte","Corea del Sur","Costa de Marfil","Costa Rica","Croacia",
+          "Cuba","Dinamarca","Dominica","Ecuador","Egipto","El Salvador",
+          "Emiratos Árabes Unidos","Eritrea","Eslovaquia","Eslovenia","España","Estados Unidos",
+          "Estonia","Esuatini","Etiopía","Filipinas","Finlandia","Fiyi",
+          "Francia","Gabón","Gambia","Georgia","Ghana","Granada",
+          "Grecia","Guatemala","Guinea","Guinea-Bisáu","Guinea Ecuatorial","Guyana",
+          "Haití","Honduras","Hungría","India","Indonesia","Irak",
+          "Irán","Irlanda","Islandia","Islas Marshall","Islas Salomón","Israel",
+          "Italia","Jamaica","Japón","Jordania","Kazajistán","Kenia",
+          "Kirguistán","Kiribati","Kosovo","Kuwait","Laos","Lesoto",
+          "Letonia","Líbano","Liberia","Libia","Liechtenstein","Lituania",
+          "Luxemburgo","Macedonia del Norte","Madagascar","Malasia","Malaui","Maldivas",
+          "Malí","Malta","Marruecos","Mauricio","Mauritania","México",
+          "Micronesia","Moldavia","Mónaco","Mongolia","Montenegro","Mozambique",
+          "Namibia","Nauru","Nepal","Nicaragua","Níger","Nigeria",
+          "Noruega","Nueva Zelanda","Omán","Países Bajos","Pakistán","Palaos",
+          "Palestina","Panamá","Papúa Nueva Guinea","Paraguay","Perú","Polonia",
+          "Portugal","Reino Unido","República Centroafricana","República Checa","República Democrática del Congo","República Dominicana",
+          "Ruanda","Rumania","Rusia","Samoa","San Cristóbal y Nieves","San Marino",
+          "San Vicente y las Granadinas","Santa Lucía","Santo Tomé y Príncipe","Senegal","Serbia","Seychelles",
+          "Sierra Leona","Singapur","Siria","Somalia","Sri Lanka","Sudáfrica",
+          "Sudán","Sudán del Sur","Suecia","Suiza","Surinam","Tailandia",
+          "Taiwán","Tanzania","Tayikistán","Timor Oriental","Togo","Tonga",
+          "Trinidad y Tobago","Túnez","Turkmenistán","Turquía","Tuvalu","Ucrania",
+          "Uganda","Uruguay","Uzbekistán","Vanuatu","Vaticano","Venezuela",
+          "Vietnam","Yemen","Yibuti","Zambia","Zimbabue"
+        ];
+        function norm(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+        function countryMatches(q){
+          var s = norm(q).trim();
+          if (!s) return COUNTRIES.slice(0, 8);
+          return COUNTRIES.filter(function(c){ return norm(c).indexOf(s) !== -1; }).slice(0, 8);
+        }
+
         /* ============ MARCA AUTOMÁTICA POR LOS PRIMEROS DÍGITOS ============ */
         function detectBrand(digits){
           var d = String(digits || "").replace(/\D/g, "");
@@ -509,7 +561,7 @@
         var seq = 1;
         var editingId = null;
         var additionalList = [];
-        var searchTerm = "", platformFilter = "all", statusFilter = "all", brandFilter = "all";
+        var searchTerm = "", platformFilter = "all", statusFilter = "all", brandFilter = "all", countryFilter = "all";
 
         var SUPABASE_CFG = (typeof window.SUPABASE_CONFIG !== "undefined") ? window.SUPABASE_CONFIG : {};
         var SUPABASE_CONFIGURED = !!(SUPABASE_CFG && SUPABASE_CFG.url && SUPABASE_CFG.anonKey
@@ -530,11 +582,13 @@
         }
         function binFromRow(r){
           return { id: r.id, bin: r.bin, brand: r.brand, platform: r.platform,
+            country: r.country || "",
             additional: r.additional_platforms || "", link: r.link || "",
             month: r.expiry_month, year: r.expiry_year, created_at: r.created_at };
         }
         function binToRow(b){
           return { bin: b.bin, brand: b.brand, platform: b.platform,
+            country: b.country || "",
             additional_platforms: b.additional || "", link: b.link || "",
             expiry_month: b.month, expiry_year: b.year };
         }
@@ -709,13 +763,15 @@
           if (!s) return PLATFORMS.slice(0, 8);
           return PLATFORMS.filter(function(p){ return p.name.toLowerCase().indexOf(s) !== -1; }).slice(0, 8);
         }
-        function attachSugg(inputEl, suggEl, onPick){
+        function attachSugg(inputEl, suggEl, onPick, matcher){
           function hide(){ suggEl.classList.remove("show"); }
           function show(){
-            var list = platformMatches(inputEl.value);
+            var list = (matcher || platformMatches)(inputEl.value);
             if (!list.length){ hide(); return; }
             suggEl.innerHTML = list.map(function(p){
-              return '<button type="button" data-name="' + esc(p.name) + '">' + esc(p.name) + '<small>' + esc(p.cat) + '</small></button>';
+              var nm = (typeof p === "string") ? p : p.name;
+              var ct = (typeof p === "string") ? "" : p.cat;
+              return '<button type="button" data-name="' + esc(nm) + '">' + esc(nm) + (ct ? '<small>' + esc(ct) + '</small>' : "") + '</button>';
             }).join("");
             suggEl.classList.add("show");
             suggEl.querySelectorAll("button").forEach(function(btn){
@@ -737,6 +793,10 @@
         attachSugg(document.getElementById("fAdditionalInput"), document.getElementById("addSugg"), function(name){
           addAdditional(name);
         });
+        attachSugg(document.getElementById("fCountry"), document.getElementById("countrySugg"), function(name){
+          document.getElementById("fCountry").value = name;
+          updatePreview();
+        }, countryMatches);
 
         /* ============ PLATAFORMAS ADICIONALES (etiquetas) ============ */
         function renderAdditionalChips(){
@@ -784,11 +844,12 @@
           var digits = document.getElementById("fBin").value.replace(/\D/g, "");
           var isNull = document.getElementById("fNull").checked;
           var plat = document.getElementById("fPlatform").value.trim();
-          if (!digits && !plat){ box.classList.remove("show"); return; }
+          var ctry = document.getElementById("fCountry").value.trim();
+          if (!digits && !plat && !ctry){ box.classList.remove("show"); return; }
           var brand = digits.length >= 2 ? detectBrand(digits) : "—";
           var exp = isNull ? "---" : (pad(parseInt(document.getElementById("fMonth").value, 10)) + "/" + document.getElementById("fYear").value);
           var st = isNull ? "Activo (sin vencimiento)" : "";
-          box.innerHTML = "Marca: <b>" + esc(brand) + "</b> · Plataforma: <b>" + esc(plat || "—") + "</b> · Vencimiento: <b>" + esc(exp) + "</b>" + (st ? " · " + st : "");
+          box.innerHTML = "Marca: <b>" + esc(brand) + "</b> · Plataforma: <b>" + esc(plat || "—") + "</b> · País: <b>" + esc(ctry || "—") + "</b> · Vencimiento: <b>" + esc(exp) + "</b>" + (st ? " · " + st : "");
           box.classList.add("show");
         }
         function syncNullState(){
@@ -802,6 +863,7 @@
           updateBrandLive(); updatePreview();
         });
         document.getElementById("fPlatform").addEventListener("input", updatePreview);
+        document.getElementById("fCountry").addEventListener("input", updatePreview);
         document.getElementById("fMonth").addEventListener("change", updatePreview);
         document.getElementById("fYear").addEventListener("change", updatePreview);
         document.getElementById("fNull").addEventListener("change", syncNullState);
@@ -815,6 +877,7 @@
           document.getElementById("cancelEditBtn").style.display = "none";
           document.getElementById("fBin").value = "";
           document.getElementById("fPlatform").value = "";
+          document.getElementById("fCountry").value = "";
           document.getElementById("fLink").value = "";
           document.getElementById("fAdditionalInput").value = "";
           additionalList = []; renderAdditionalChips();
@@ -831,6 +894,7 @@
           }
           var platform = document.getElementById("fPlatform").value.trim();
           if (!platform){ toast("Escribe o elige la plataforma a la que pertenece."); return; }
+          var country = document.getElementById("fCountry").value.trim();
           var link = document.getElementById("fLink").value.trim();
           if (link && link.indexOf("http://") !== 0 && link.indexOf("https://") !== 0){
             toast("El link debe empezar por https:// o http://");
@@ -841,6 +905,7 @@
             bin: digits,
             brand: detectBrand(digits),
             platform: platform,
+            country: country,
             additional: additionalList.join(" - "),
             link: link,
             month: isNull ? null : parseInt(document.getElementById("fMonth").value, 10),
@@ -887,9 +952,10 @@
           }
           if (statusFilter !== "all" && statusOf(b) !== statusFilter) return false;
           if (brandFilter !== "all" && b.brand !== brandFilter) return false;
+          if (countryFilter !== "all" && (b.country || "") !== countryFilter) return false;
           if (searchTerm){
-            var hay = (b.bin + " " + b.brand + " " + b.platform + " " + (b.additional || "") + " " + (b.link || "")).toLowerCase();
-            if (hay.indexOf(searchTerm) === -1) return false;
+            var hay = norm(b.bin + " " + b.brand + " " + b.platform + " " + (b.country || "") + " " + (b.additional || "") + " " + (b.link || ""));
+            if (hay.indexOf(norm(searchTerm)) === -1) return false;
           }
           return true;
         }
@@ -913,6 +979,14 @@
             return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
           }).join("");
           if (brands[curB]) bf.value = curB;
+          var countries = {};
+          bins.forEach(function(b){ if (b.country) countries[b.country] = true; });
+          var cf = document.getElementById("countryFilter");
+          var curC = cf.value;
+          cf.innerHTML = '<option value="all">Todos los países</option>' + Object.keys(countries).sort().map(function(p){
+            return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
+          }).join("");
+          if (countries[curC]) cf.value = curC;
         }
         function renderStats(){
           var ok=0, warn=0, bad=0, nul=0;
@@ -953,6 +1027,7 @@
             html += '<div class="bin">'
               + '<div><div class="binn mono">' + esc(b.bin) + '</div><div class="brand">' + esc(b.brand) + '</div></div>'
               + '<div><div class="lbl">Plataforma</div><div class="val">' + esc(b.platform) + '</div></div>'
+              + '<div><div class="lbl">País</div><div class="val">' + (b.country ? esc(b.country) : "—") + '</div></div>'
               + '<div><div class="lbl">Plataformas adicionales</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '<div class="val" style="color:var(--ink-3)">—</div>') + '</div>'
               + '<div><div class="lbl">Vencimiento</div><div class="val mono">' + fmtExpiry(b) + '</div><div class="days">' + daysTxt + '</div></div>'
               + '<div><span class="badge ' + st + '">' + statusLabel(st) + '</span></div>'
@@ -976,6 +1051,7 @@
                 document.getElementById("cancelEditBtn").style.display = "inline-block";
                 document.getElementById("fBin").value = rec.bin;
                 document.getElementById("fPlatform").value = rec.platform;
+                document.getElementById("fCountry").value = rec.country || "";
                 document.getElementById("fLink").value = rec.link || "";
                 additionalList = splitAdditional(rec.additional); renderAdditionalChips();
                 document.getElementById("fNull").checked = (rec.month == null || rec.year == null);
@@ -1015,10 +1091,11 @@
 
         /* ============ FILTROS ============ */
         function resetFilters(){
-          platformFilter = "all"; statusFilter = "all"; brandFilter = "all"; searchTerm = "";
+          platformFilter = "all"; statusFilter = "all"; brandFilter = "all"; countryFilter = "all"; searchTerm = "";
           document.getElementById("platformFilter").value = "all";
           document.getElementById("statusFilter").value = "all";
           document.getElementById("brandFilter").value = "all";
+          document.getElementById("countryFilter").value = "all";
           document.getElementById("searchInput").value = "";
           renderAll();
         }
@@ -1028,6 +1105,7 @@
         document.getElementById("platformFilter").addEventListener("change", function(e){ platformFilter = e.target.value; renderBins(); });
         document.getElementById("statusFilter").addEventListener("change", function(e){ statusFilter = e.target.value; renderBins(); });
         document.getElementById("brandFilter").addEventListener("change", function(e){ brandFilter = e.target.value; renderBins(); });
+        document.getElementById("countryFilter").addEventListener("change", function(e){ countryFilter = e.target.value; renderBins(); });
         document.getElementById("clearFilterBtn").addEventListener("click", resetFilters);
 
         renderAll();
