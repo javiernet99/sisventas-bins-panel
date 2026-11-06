@@ -97,6 +97,15 @@
       .dash-sub{margin:6px 0 0;font-size:13px;color:var(--ink-2);font-weight:600}
       .btn-new{margin-left:auto;padding:13px 22px;border:none;border-radius:12px;font-size:14.5px;font-weight:800;color:#04160d;background:linear-gradient(90deg,#2bffa4,#0ecb6f);box-shadow:0 0 22px rgba(35,229,139,.35);display:flex;align-items:center;gap:8px}
       .btn-new:hover{filter:brightness(1.07)}
+      .btn-gen{padding:13px 20px;border:1px solid rgba(35,229,139,.55);border-radius:12px;font-size:14.5px;font-weight:800;color:var(--green);background:var(--green-soft);display:flex;align-items:center;gap:8px;cursor:pointer}
+      .btn-gen:hover{border-color:var(--green)}
+      .dash-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+      .gen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .gen-output{width:100%;min-height:130px;padding:12px 14px;font-size:13.5px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink);background:var(--panel-3);border:1px solid var(--line);border-radius:10px;outline:none;resize:vertical}
+      .gen-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+      .gen-result{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel-3);margin-top:8px}
+      .gen-result .mono{font-weight:800;font-size:14.5px;letter-spacing:.03em}
+      .gen-result .meta{font-size:12.5px;color:var(--ink-2);font-weight:700}
       .kpis{display:grid;grid-template-columns:repeat(5,1fr);margin-top:22px}
       .kpi{padding:15px 18px 16px;border-left:1px solid var(--line)}
       .kpi:first-child{border-left:none}
@@ -280,7 +289,10 @@
                 <h2><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Panel de BINs <span class="vista-pill">BASE DE DATOS</span></h2>
                 <p class="dash-sub">Hola, Administrador · <span id="helloDate">—</span></p>
               </div>
-              <button class="btn-new" id="newBinBtn" type="button">+&nbsp; Agregar BIN</button>
+              <div class="dash-actions">
+                <button class="btn-gen" id="genBtn" type="button">Generador de BINs</button>
+                <button class="btn-new" id="newBinBtn" type="button">+&nbsp; Agregar BIN</button>
+              </div>
             </div>
 
             <div class="card kpis">
@@ -364,6 +376,81 @@
                   <span class="session-note" id="syncNote">Modo local: los registros se mantienen solo mientras esta sesión esté abierta.</span>
                 </div>
               </form>
+            </div>
+
+            <!-- ===== GENERADOR DE BINS ===== -->
+            <h2 class="sec" id="genAnchor" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Generador de BINs</h2>
+            <p class="sec-sub" id="genSub" style="display:none">Genera números de prueba en tu navegador, estilo Namso. No se guarda nada en Supabase: solo genera, y si quieres guardar uno, usa su botón “Guardar el BIN en el panel”.</p>
+            <div class="panel-card" id="genPanel" style="display:none">
+              <div class="gen-grid">
+                <div class="field wide">
+                  <label for="gPattern">Patrón de BIN (usa “x” para posiciones al azar)</label>
+                  <input id="gPattern" type="text" autocomplete="off" placeholder="Ej.: 421828xxxxxxxxxx" maxlength="19" />
+                  <div class="hint">Solo números y “x”. Ej.: 421828 para Visa, 51 para Mastercard. Si el patrón es más corto que la longitud, se completa con “x”.</div>
+                </div>
+                <div class="field">
+                  <label for="gLength">Longitud</label>
+                  <select id="gLength">
+                    <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16" selected>16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="gQty">Cantidad (1 a 100)</label>
+                  <input id="gQty" type="number" min="1" max="100" value="10" />
+                </div>
+                <div class="field">
+                  <label for="gExpMode">Vencimiento</label>
+                  <select id="gExpMode">
+                    <option value="random" selected>Mes y año aleatorios</option>
+                    <option value="fixed">Mes y año fijos</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Mes / año fijos</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <select id="gExpMonth" aria-label="Mes fijo del generador">
+                      <option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                    </select>
+                    <select id="gExpYear" aria-label="Año fijo del generador"></select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="gCvvMode">CVV</label>
+                  <select id="gCvvMode">
+                    <option value="random" selected>Aleatorio</option>
+                    <option value="fixed">Fijo</option>
+                    <option value="none">Sin CVV</option>
+                  </select>
+                  <div class="hint">CVV fijo: escribe 3 o 4 dígitos abajo.</div>
+                </div>
+                <div class="field">
+                  <label for="gCvvFixed">CVV fijo (opcional)</label>
+                  <input id="gCvvFixed" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej.: 123" maxlength="4" />
+                </div>
+                <div class="field">
+                  <label for="gFormat">Formato de salida</label>
+                  <select id="gFormat">
+                    <option value="pipe" selected>PIPE (número|mes|año|CVV)</option>
+                    <option value="csv">CSV</option>
+                    <option value="json">JSON</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <div class="gen-result" style="margin-top:0"><span class="meta">Marca del patrón: <b id="gBrand" style="color:var(--green)">—</b></span><span class="meta">Solo se usan los dígitos fijos iniciales del patrón.</span></div>
+                </div>
+              </div>
+              <div class="gen-row">
+                <button class="btn-add" type="button" id="gGenerateBtn">Generar</button>
+                <button class="btn-ghost" type="button" id="gCopyBtn">Copiar resultados</button>
+                <a class="btn-sm" href="https://namso-generator.web.app/" target="_blank" rel="noopener">Abrir el sitio original</a>
+                <span class="session-note">Solo genera números de prueba con dígito verificador Luhn. No son tarjetas reales.</span>
+              </div>
+              <div style="margin-top:14px">
+                <label for="gOutput" style="display:block;font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px">Resultados</label>
+                <textarea class="gen-output" id="gOutput" readonly placeholder="Pulsa Generar para ver los resultados aquí."></textarea>
+              </div>
+              <div id="gResults"></div>
             </div>
 
             <!-- ===== LISTA ===== -->
@@ -1107,6 +1194,162 @@
         document.getElementById("brandFilter").addEventListener("change", function(e){ brandFilter = e.target.value; renderBins(); });
         document.getElementById("countryFilter").addEventListener("change", function(e){ countryFilter = e.target.value; renderBins(); });
         document.getElementById("clearFilterBtn").addEventListener("click", resetFilters);
+
+        /* ============ GENERADOR DE BINS (en el navegador, sin guardar) ============ */
+        var genResults = [];
+        function genFixedPrefix(){
+          var p = document.getElementById("gPattern").value.replace(/\s/g, "").toUpperCase();
+          var m = p.match(/^[0-9]+/);
+          return m ? m[0] : "";
+        }
+        function genFixedBrand(){
+          var prefix = genFixedPrefix();
+          if (!prefix) return "—";
+          var b = detectBrand(prefix);
+          return b || "Otra";
+        }
+        function luhnValid(num){
+          var sum = 0, dbl = false;
+          for (var i = num.length - 1; i >= 0; i--){
+            var d = parseInt(num.charAt(i), 10);
+            if (dbl){ d *= 2; if (d > 9) d -= 9; }
+            sum += d; dbl = !dbl;
+          }
+          return sum % 10 === 0;
+        }
+        function genOneNumber(pattern, length){
+          var chars = pattern.split("");
+          while (chars.length < length) chars.push("x");
+          chars = chars.slice(0, length);
+          var xIdx = [];
+          for (var i = 0; i < chars.length; i++) if (chars[i] === "x" || chars[i] === "X") xIdx.push(i);
+          if (!xIdx.length) return chars.join("");
+          var lastX = xIdx[xIdx.length - 1];
+          xIdx.forEach(function(idx){
+            if (idx !== lastX) chars[idx] = String(Math.floor(Math.random() * 10));
+          });
+          chars[lastX] = "0";
+          for (var d = 0; d <= 9; d++){
+            chars[lastX] = String(d);
+            if (luhnValid(chars.join(""))) return chars.join("");
+          }
+          chars[lastX] = String(Math.floor(Math.random() * 10));
+          return chars.join("");
+        }
+        function syncGenInputs(){
+          var fixedExp = document.getElementById("gExpMode").value === "fixed";
+          document.getElementById("gExpMonth").disabled = !fixedExp;
+          document.getElementById("gExpYear").disabled = !fixedExp;
+          document.getElementById("gCvvFixed").disabled = document.getElementById("gCvvMode").value !== "fixed";
+          document.getElementById("gBrand").textContent = genFixedBrand();
+        }
+        (function buildGenYears(){
+          var y = limaNow().getFullYear();
+          var sel = document.getElementById("gExpYear");
+          var html = "";
+          for (var i = y; i <= y + 10; i++) html += '<option value="' + i + '">' + i + '</option>';
+          sel.innerHTML = html;
+        })();
+        document.getElementById("genBtn").addEventListener("click", function(){
+          var panel = document.getElementById("genPanel");
+          var open = panel.style.display === "none";
+          panel.style.display = open ? "block" : "none";
+          document.getElementById("genAnchor").style.display = open ? "flex" : "none";
+          document.getElementById("genSub").style.display = open ? "block" : "none";
+          if (open){ syncGenInputs(); scrollToId("genAnchor"); document.getElementById("gPattern").focus({preventScroll:true}); }
+        });
+        document.getElementById("gPattern").addEventListener("input", function(ev){
+          ev.target.value = ev.target.value.replace(/[^0-9xX]/g, "").slice(0, 19);
+          syncGenInputs();
+        });
+        document.getElementById("gExpMode").addEventListener("change", syncGenInputs);
+        document.getElementById("gCvvMode").addEventListener("change", syncGenInputs);
+        document.getElementById("gCvvFixed").addEventListener("input", function(ev){
+          ev.target.value = ev.target.value.replace(/\D/g, "").slice(0, 4);
+        });
+        document.getElementById("gGenerateBtn").addEventListener("click", function(){
+          var pattern = document.getElementById("gPattern").value.replace(/\s/g, "").toLowerCase();
+          if (!pattern || !/^[0-9x]+$/.test(pattern)){ toast("Escribe un patrón de BIN: números y “x” para posiciones al azar."); return; }
+          if (!/[0-9]/.test(pattern)){ toast("El patrón debe tener al menos un dígito fijo."); return; }
+          var length = parseInt(document.getElementById("gLength").value, 10);
+          if (pattern.length > length){ toast("El patrón es más largo que la longitud elegida."); return; }
+          var qty = parseInt(document.getElementById("gQty").value, 10);
+          if (isNaN(qty) || qty < 1) qty = 1;
+          if (qty > 100) qty = 100;
+          document.getElementById("gQty").value = qty;
+          var brand = genFixedBrand();
+          var expMode = document.getElementById("gExpMode").value;
+          var cvvMode = document.getElementById("gCvvMode").value;
+          var cvvFixed = document.getElementById("gCvvFixed").value.replace(/\D/g, "");
+          if (cvvMode === "fixed" && !(cvvFixed.length === 3 || cvvFixed.length === 4)){
+            toast("El CVV fijo debe tener 3 o 4 dígitos."); return;
+          }
+          var curYear = limaNow().getFullYear();
+          genResults = [];
+          for (var i = 0; i < qty; i++){
+            var month, year;
+            if (expMode === "fixed"){
+              month = parseInt(document.getElementById("gExpMonth").value, 10);
+              year = parseInt(document.getElementById("gExpYear").value, 10);
+            } else {
+              month = 1 + Math.floor(Math.random() * 12);
+              year = curYear + Math.floor(Math.random() * 6);
+            }
+            var cvv = "";
+            if (cvvMode === "fixed") cvv = cvvFixed;
+            else if (cvvMode === "random"){
+              var cvvLen = (brand === "American Express") ? 4 : 3;
+              cvv = "";
+              for (var c = 0; c < cvvLen; c++) cvv += String(Math.floor(Math.random() * 10));
+            }
+            genResults.push({ number: genOneNumber(pattern, length), brand: brand, month: month, year: year, cvv: cvv });
+          }
+          var fmt = document.getElementById("gFormat").value;
+          var out;
+          if (fmt === "csv"){
+            out = "number,brand,month,year,cvv\n" + genResults.map(function(r){
+              return r.number + "," + r.brand + "," + pad(r.month) + "," + r.year + "," + r.cvv;
+            }).join("\n");
+          } else if (fmt === "json"){
+            out = JSON.stringify(genResults.map(function(r){
+              return { number: r.number, brand: r.brand, month: pad(r.month), year: r.year, cvv: r.cvv };
+            }), null, 2);
+          } else {
+            out = genResults.map(function(r){
+              return r.number + "|" + pad(r.month) + "|" + r.year + "|" + r.cvv;
+            }).join("\n");
+          }
+          document.getElementById("gOutput").value = out;
+          var area = document.getElementById("gResults");
+          area.innerHTML = genResults.map(function(r, idx){
+            return '<div class="gen-result"><div><div class="mono">' + esc(r.number) + '</div><div class="meta">' + esc(r.brand) + ' · ' + pad(r.month) + '/' + r.year + (r.cvv ? ' · CVV ' + esc(r.cvv) : ' · Sin CVV') + '</div></div>'
+              + '<button class="btn-sm" type="button" data-gen-save="' + idx + '">Guardar el BIN en el panel</button></div>';
+          }).join("");
+          toast("Se generaron " + genResults.length + " BINs de prueba.");
+        });
+        document.getElementById("gCopyBtn").addEventListener("click", function(){
+          var out = document.getElementById("gOutput");
+          if (!out.value){ toast("Primero pulsa Generar."); return; }
+          function done(){ toast("Resultados copiados."); }
+          if (navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(out.value).then(done, function(){ out.select(); document.execCommand("copy"); done(); });
+          } else { out.select(); document.execCommand("copy"); done(); }
+        });
+        document.getElementById("gResults").addEventListener("click", function(ev){
+          var btn = ev.target.closest ? ev.target.closest("[data-gen-save]") : null;
+          if (!btn) return;
+          var r = genResults[parseInt(btn.getAttribute("data-gen-save"), 10)];
+          if (!r) return;
+          /* Solo precarga el formulario normal "Nuevo BIN" con el BIN
+             (la marca se detecta sola en el formulario). No guarda nada. */
+          resetForm();
+          document.getElementById("fBin").value = r.number;
+          updateBrandLive(); updatePreview();
+          scrollToId("formAnchor");
+          document.getElementById("fPlatform").focus({preventScroll:true});
+          toast("BIN precargado: " + r.number + " · " + r.brand + ". Completa la plataforma y guarda.");
+        });
+        syncGenInputs();
 
         renderAll();
         loadBinsFromSupabase();
