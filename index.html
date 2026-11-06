@@ -318,10 +318,10 @@
                     </div>
                     <div class="hint">Toca un resultado de la lista mundial o escribe un nombre libre.</div>
                   </div>
-                  <div class="field wide">
-                    <label for="fCountry">País al que pertenece el BIN</label>
+                  <div class="field">
+                    <label for="fCountry">IP</label>
                     <div class="sugg-wrap">
-                      <input id="fCountry" type="text" placeholder="Busca un país… Ej.: Perú" />
+                      <input id="fCountry" type="text" placeholder="Aquí se pone el país de este BIN" />
                       <div class="sugg" id="countrySugg"></div>
                     </div>
                     <div class="hint">Toca un resultado de la lista de países o escribe un nombre libre.</div>
@@ -380,7 +380,7 @@
                 <option value="null">Sin vencimiento</option>
               </select>
               <select id="brandFilter" aria-label="Filtrar por marca"><option value="all">Todas las marcas</option></select>
-              <select id="countryFilter" aria-label="Filtrar por país"><option value="all">Todos los países</option></select>
+              <select id="countryFilter" aria-label="Filtrar por IP"><option value="all">Todas las IP</option></select>
               <button class="btn-ghost" id="clearFilterBtn" type="button">Ver todos</button>
             </div>
             <div id="binsArea"></div>
@@ -849,7 +849,7 @@
           var brand = digits.length >= 2 ? detectBrand(digits) : "—";
           var exp = isNull ? "---" : (pad(parseInt(document.getElementById("fMonth").value, 10)) + "/" + document.getElementById("fYear").value);
           var st = isNull ? "Activo (sin vencimiento)" : "";
-          box.innerHTML = "Marca: <b>" + esc(brand) + "</b> · Plataforma: <b>" + esc(plat || "—") + "</b> · País: <b>" + esc(ctry || "—") + "</b> · Vencimiento: <b>" + esc(exp) + "</b>" + (st ? " · " + st : "");
+          box.innerHTML = "Marca: <b>" + esc(brand) + "</b> · Plataforma: <b>" + esc(plat || "—") + "</b> · IP: <b>" + esc(ctry || "—") + "</b> · Vencimiento: <b>" + esc(exp) + "</b>" + (st ? " · " + st : "");
           box.classList.add("show");
         }
         function syncNullState(){
@@ -983,7 +983,7 @@
           bins.forEach(function(b){ if (b.country) countries[b.country] = true; });
           var cf = document.getElementById("countryFilter");
           var curC = cf.value;
-          cf.innerHTML = '<option value="all">Todos los países</option>' + Object.keys(countries).sort().map(function(p){
+          cf.innerHTML = '<option value="all">Todas las IP</option>' + Object.keys(countries).sort().map(function(p){
             return '<option value="' + esc(p) + '">' + esc(p) + '</option>';
           }).join("");
           if (countries[curC]) cf.value = curC;
@@ -1027,7 +1027,7 @@
             html += '<div class="bin">'
               + '<div><div class="binn mono">' + esc(b.bin) + '</div><div class="brand">' + esc(b.brand) + '</div></div>'
               + '<div><div class="lbl">Plataforma</div><div class="val">' + esc(b.platform) + '</div></div>'
-              + '<div><div class="lbl">País</div><div class="val">' + (b.country ? esc(b.country) : "—") + '</div></div>'
+              + '<div><div class="lbl">IP</div><div class="val">' + (b.country ? esc(b.country) : "—") + '</div></div>'
               + '<div><div class="lbl">Plataformas adicionales</div>' + (tags ? '<div class="tags">' + tags + '</div>' : '<div class="val" style="color:var(--ink-3)">—</div>') + '</div>'
               + '<div><div class="lbl">Vencimiento</div><div class="val mono">' + fmtExpiry(b) + '</div><div class="days">' + daysTxt + '</div></div>'
               + '<div><span class="badge ' + st + '">' + statusLabel(st) + '</span></div>'
